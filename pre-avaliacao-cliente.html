@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pré-avaliação — Consultoria de Visagismo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink: #0f0e0c; --ink2: #3a3830; --ink3: #7a7670;
+  --surface: #faf8f4; --card: #ffffff; --border: #e8e4dc;
+  --accent: #b8975a; --accent-light: #f5ede0; --radius: 12px;
+  --green: #1D9E75; --green-light: #E1F5EE; --green-dark: #0F6E56;
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--ink); min-height: 100vh; }
+.app { max-width: 600px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+.header { text-align: center; margin-bottom: 3rem; padding-top: 1rem; }
+.header-eyebrow { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin-bottom: 12px; }
+.header h1 { font-family: 'DM Serif Display', serif; font-size: 32px; line-height: 1.2; color: var(--ink); margin-bottom: 12px; }
+.header h1 em { font-style: italic; color: var(--accent); }
+.header p { font-size: 15px; color: var(--ink3); line-height: 1.7; max-width: 440px; margin: 0 auto; }
+.progress-wrap { margin-bottom: 2.5rem; }
+.progress-bar-bg { height: 2px; background: var(--border); border-radius: 2px; margin-bottom: 8px; }
+.progress-bar { height: 2px; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+.progress-label { font-size: 12px; color: var(--ink3); display: flex; justify-content: space-between; }
+.step { display: none; animation: fadeIn 0.3s ease; }
+.step.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.step-q { font-family: 'DM Serif Display', serif; font-size: 22px; line-height: 1.35; margin-bottom: 6px; color: var(--ink); }
+.step-hint { font-size: 13px; color: var(--ink3); margin-bottom: 1.5rem; line-height: 1.6; }
+input[type="text"], input[type="number"], textarea {
+  width: 100%; padding: 13px 16px; font-size: 15px; font-family: 'DM Sans', sans-serif;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  background: var(--card); color: var(--ink); transition: border-color 0.15s; outline: none;
+}
+input:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+@media (max-width: 500px) { .two-col { grid-template-columns: 1fr; } }
+.options { display: flex; flex-direction: column; gap: 10px; }
+.opt { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--card); cursor: pointer; transition: all 0.15s; text-align: left; width: 100%; font-family: 'DM Sans', sans-serif; }
+.opt:hover { border-color: var(--accent); background: var(--accent-light); }
+.opt.selected { border-color: var(--accent); background: var(--accent-light); }
+.opt-marker { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.opt.selected .opt-marker { background: var(--accent); border-color: var(--accent); }
+.opt.selected .opt-marker::after { content: ''; width: 8px; height: 8px; background: #fff; border-radius: 50%; }
+.opt-main { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.4; }
+.opt-sub { font-size: 12px; color: var(--ink3); margin-top: 3px; line-height: 1.5; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { padding: 9px 18px; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; border: 1.5px solid var(--border); border-radius: 999px; background: var(--card); color: var(--ink2); cursor: pointer; transition: all 0.12s; }
+.tag:hover { border-color: var(--accent); color: var(--accent); }
+.tag.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+.photo-card { border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; background: var(--accent-light); margin-bottom: 1.5rem; }
+.photo-card h3 { font-size: 13px; font-weight: 500; color: var(--accent); margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+.photo-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.photo-list li { font-size: 13px; color: var(--ink2); display: flex; gap: 10px; }
+.photo-list li::before { content: "→"; color: var(--accent); flex-shrink: 0; }
+.photo-note { font-size: 12px; color: var(--ink3); margin-top: 10px; line-height: 1.6; }
+.nav { display: flex; gap: 10px; margin-top: 2rem; align-items: center; }
+.btn-next { flex: 1; padding: 14px; font-size: 15px; font-weight: 500; font-family: 'DM Sans', sans-serif; background: var(--ink); color: #fff; border: none; border-radius: var(--radius); cursor: pointer; transition: opacity 0.15s; }
+.btn-next:hover { opacity: 0.85; }
+.btn-back { padding: 14px 18px; font-size: 15px; font-family: 'DM Sans', sans-serif; background: none; color: var(--ink3); border: 1.5px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all 0.15s; }
+.btn-back:hover { border-color: var(--ink3); color: var(--ink); }
+#loading { display: none; text-align: center; padding: 3rem 0; }
+.spinner { width: 36px; height: 36px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1.5rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading p { font-size: 14px; color: var(--ink3); line-height: 1.7; }
+#loading strong { color: var(--ink); font-weight: 500; }
+#result { display: none; }
+.result-header { text-align: center; margin-bottom: 2.5rem; }
+.result-check { width: 52px; height: 52px; border-radius: 50%; background: var(--green-light); border: 2px solid var(--green); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-size: 20px; }
+.result-header h2 { font-family: 'DM Serif Display', serif; font-size: 26px; margin-bottom: 8px; }
+.result-header p { font-size: 14px; color: var(--ink3); line-height: 1.7; }
+.result-card { border: 1.5px solid var(--border); border-radius: 16px; background: var(--card); padding: 1.5rem; margin-bottom: 1rem; }
+.result-card-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin-bottom: 10px; }
+.result-card-content { font-size: 14px; color: var(--ink2); line-height: 1.8; }
+.result-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 2rem; margin-bottom: 1rem; }
+.btn-pdf { width: 100%; padding: 15px 20px; font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif; border: none; border-radius: var(--radius); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--ink); color: #fff; }
+.btn-pdf:hover { opacity: 0.88; }
+.btn-pdf.generating { opacity: 0.7; cursor: not-allowed; }
+.btn-wa-share { width: 100%; padding: 15px 20px; font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif; border: none; border-radius: var(--radius); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: #fff; }
+.btn-wa-share:hover { background: #1ebe5d; }
+.action-note { font-size: 12px; color: var(--ink3); text-align: center; line-height: 1.6; padding: 0 1rem; }
+.result-footer { margin-top: 1.5rem; padding: 1.5rem; background: var(--ink); border-radius: 16px; text-align: center; color: #fff; }
+.result-footer strong { font-weight: 500; font-size: 15px; display: block; margin-bottom: 6px; }
+.result-footer p { font-size: 14px; line-height: 1.7; opacity: 0.8; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-eyebrow">Consultoria de visagismo masculino</div>
+    <h1>Antes da sua consulta,<br>vamos te <em>conhecer</em></h1>
+    <p>Responda com sinceridade. Quanto mais honesto você for, mais direta e útil será a sua consultoria.</p>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar-bg"><div class="progress-bar" id="progress" style="width:12%"></div></div>
+    <div class="progress-label"><span id="step-label">Etapa 1 de 8</span><span id="step-pct">12%</span></div>
+  </div>
+
+  <div class="step active" id="s1">
+    <div class="step-q">Como você se chama e quantos anos tem?</div>
+    <div class="step-hint">Informações básicas para personalizar sua análise.</div>
+    <div class="two-col">
+      <input type="text" id="nome" placeholder="Seu nome" />
+      <input type="number" id="idade" placeholder="Idade" min="16" max="80" />
+    </div>
+    <div class="nav"><button class="btn-next" onclick="goNext(1)">Continuar →</button></div>
+  </div>
+
+  <div class="step" id="s2">
+    <div class="step-q">Qual é a sua profissão?</div>
+    <div class="step-hint">Isso influencia diretamente o nível de formalidade do seu estilo.</div>
+    <input type="text" id="profissao" placeholder="Ex: advogado, designer, empreendedor..." />
+    <div class="nav">
+      <button class="btn-back" onclick="goBack(2)">←</button>
+      <button class="btn-next" onclick="goNext(2)">Continuar →</button>
+    </div>
+  </div>
+
+  <div class="step" id="s3">
+    <div class="step-q">Como é o seu dia a dia?</div>
+    <div class="step-hint">Selecione o que melhor descreve sua rotina.</div>
+    <div class="options" id="opts-rotina">
+      <button class="opt" onclick="selectOpt('rotina',this,'Corporativo/formal')">
+        <div class="opt-marker"></div>
+        <div class="opt-text"><div class="opt-main">Corporativo / formal</div><div class="opt-sub">Reuniões, clientes, escritório</div></div>
+      </button>
+      <button class="opt" onclick="selectOpt('rotina',this,'Misto — formal e casual')">
+        <div class="opt-marker"></div>
+        <div class="opt-text"><div class="opt-main">Misto</div><div class="opt-sub">Transita entre ambientes formais e casuais</div></div>
+      </button>
+      <button class="opt" onclick="selectOpt('rotina',this,'Casual/criativo')">
+        <div class="opt-marker"></div>
+        <div class="opt-text"><div class="opt-main">Casual / criativo</div><div class="opt-sub">Ambiente descontraído, home office ou área criativa</div></div>
+      </button>
+      <button class="opt" onclick="selectOpt('rotina',this,'Trabalho físico/externo')">
+        <div class="opt-marker"></div>
+        <div class="opt-text"><div class="opt-main">Trabalho físico / externo</div><div class="opt-sub">Campo, obra, logística — funcionalidade em primeiro lugar</div></div>
+      </button>
+    </div>
+    <div class="nav">
+      <button class="btn-back" onclick="goBack(3)">←</button>
+      <button class="btn-next" onclick="goNext(3)">Continuar →</button>
+    </div>
+  </div>
+
+  <div class="step" id="s4">
+    <div class="step-q">Que imagem você quer transmitir?</div>
+    <div class="step-hint">Selecione até 3 palavras.</div>
+    <div class="tags" id="tags-imagem">
+      <button class="tag" onclick="toggleTag(this,'tags-imagem',3)">Confiante</button>
+      <button class="tag" onclick="toggleTag(this,'tags-imagem',3)">Elegante</button>
+      <button class="tag" onclick="toggleTag(this,'tags-imagem',3)">Moderno</button>
+      <button class="tag" onclick="toggleTag(this,'tags-imagem',3)">Clássico</button>
+      <button class="tag" onclick="toggleTag(this,'tags-imagem',3)">Forte</button>
+      <button class="tag" onclick="toggleTag(this,'tags-imagem',3)">Despojado</button>
+      <button class="tag" onclick="toggleTag(this,'tags-imagem',3)">Criativo</button>
+      <button class="tag" onclick="toggleTag(this,'tags-imagem',3)">Discreto</button>
+      <button class="tag" onclick="toggleTag(this,'tags-imagem',3)">Acessível</button>
+      <button class="tag" onclick="toggleTag(this,'tags-imagem',3)">Sério</button>
+    </div>
+    <div class="nav">
+      <button class="btn-back" onclick="goBack(4)">←</button>
+      <button class="btn-next" onclick="goNext(4)">Continuar →</button>
+    </div>
+  </div>
+
+  <div class="step" id="s5">
+    <div class="step-q">Qual é a sua maior insatisfação com o seu visual hoje?</div>
+    <div class="step-hint">Seja direto. Essa é a pergunta mais importante do formulário.</div>
+    <textarea id="insatisfacao" placeholder="Ex: meu cabelo perde a forma rápido, não sei o que combina com meu rosto..."></textarea>
+    <div class="nav">
+      <button class="btn-back" onclick="goBack(5)">←</button>
+      <button class="btn-next" onclick="goNext(5)">Continuar →</button>
+    </div>
+  </div>
+
+  <div class="step" id="s6">
+    <div class="step-q">Existe alguém cujo visual te inspira?</div>
+    <div class="step-hint">Famoso, personagem ou conhecido. Se não tiver, escreva "não tenho referência".</div>
+    <textarea id="referencia" placeholder="Ex: gosto do corte do Ryan Reynolds, mas quero algo menos produzido..."></textarea>
+    <div class="nav">
+      <button class="btn-back" onclick="goBack(6)">←</button>
+      <button class="btn-next" onclick="goNext(6)">Continuar →</button>
+    </div>
+  </div>
+
+  <div class="step" id="s7">
+    <div class="step-q">Tem alguma limitação que devo saber antes da consultoria?</div>
+    <div class="step-hint">Queda de cabelo, restrição profissional, alergia a produtos. Se não tiver, escreva "nenhuma".</div>
+    <textarea id="limitacao" placeholder="Ex: tenho calvície avançando no topo, trabalho em empresa conservadora..."></textarea>
+    <div class="nav">
+      <button class="btn-back" onclick="goBack(7)">←</button>
+      <button class="btn-next" onclick="goNext(7)">Continuar →</button>
+    </div>
+  </div>
+
+  <div class="step" id="s8">
+    <div class="step-q">Última etapa — as fotos</div>
+    <div class="step-hint">São a base técnica da análise. Envie pelo WhatsApp após preencher este formulário.</div>
+    <div class="photo-card">
+      <h3>3 fotos por WhatsApp após preencher</h3>
+      <ul class="photo-list">
+        <li>Frente — olhando direto para a câmera, expressão neutra</li>
+        <li>Perfil direito — orelha visível, queixo paralelo ao chão</li>
+        <li>Perfil esquerdo — mesma posição</li>
+      </ul>
+      <p class="photo-note">Luz natural de frente. Sem boné, óculos ou filtro. Cabelo no estado real, sem produto.</p>
+    </div>
+    <div class="nav">
+      <button class="btn-back" onclick="goBack(8)">←</button>
+      <button class="btn-next" onclick="submitForm()">Gerar minha pré-avaliação →</button>
+    </div>
+  </div>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <p><strong>Analisando suas respostas...</strong><br>Estamos gerando seu diagnóstico personalizado.<br>Isso leva alguns segundos.</p>
+  </div>
+
+  <div id="result">
+    <div class="result-header">
+      <div class="result-check">✓</div>
+      <h2>Sua pré-avaliação está pronta</h2>
+      <p>Com base nas suas respostas, preparamos um diagnóstico inicial.<br>Ele orienta o que vamos aprofundar na sua consultoria.</p>
+    </div>
+    <div id="result-cards"></div>
+    <div class="result-actions">
+      <button class="btn-pdf" id="btn-pdf" onclick="gerarPDF()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Baixar PDF da pré-avaliação
+      </button>
+      <button class="btn-wa-share" onclick="compartilharWA()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Enviar resultado pelo WhatsApp
+      </button>
+      <p class="action-note">O PDF é salvo no seu dispositivo. O WhatsApp abre com o resumo completo pronto para enviar.</p>
+    </div>
+    <div class="result-footer">
+      <strong>Próximo passo</strong>
+      <p>Envie as 3 fotos por WhatsApp e confirme sua consultoria.<br>Com elas, a análise técnica completa será finalizada.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const state = { rotina: '', imagem: [] };
+const totalSteps = 8;
+let dadosGlobais = null;
+
+function updateProgress(step) {
+  const pct = Math.round((step / totalSteps) * 100);
+  document.getElementById('progress').style.width = pct + '%';
+  document.getElementById('step-label').textContent = `Etapa ${step} de ${totalSteps}`;
+  document.getElementById('step-pct').textContent = pct + '%';
+}
+function goNext(current) {
+  if (!validateStep(current)) return;
+  document.getElementById('s' + current).classList.remove('active');
+  document.getElementById('s' + (current + 1)).classList.add('active');
+  updateProgress(current + 1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function goBack(current) {
+  document.getElementById('s' + current).classList.remove('active');
+  document.getElementById('s' + (current - 1)).classList.add('active');
+  updateProgress(current - 1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function validateStep(step) {
+  const checks = {
+    1: () => document.getElementById('nome').value.trim() && document.getElementById('idade').value.trim(),
+    2: () => document.getElementById('profissao').value.trim(),
+    3: () => state.rotina,
+    4: () => state.imagem.length > 0,
+    5: () => document.getElementById('insatisfacao').value.trim(),
+    6: () => document.getElementById('referencia').value.trim(),
+    7: () => document.getElementById('limitacao').value.trim(),
+  };
+  if (checks[step] && !checks[step]()) { alert('Preencha este campo para continuar.'); return false; }
+  return true;
+}
+function selectOpt(group, btn, value) {
+  btn.closest('.options').querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+  btn.classList.add('selected');
+  state[group] = value;
+}
+function toggleTag(btn, groupId, max) {
+  const row = document.getElementById(groupId);
+  if (btn.classList.contains('selected')) {
+    btn.classList.remove('selected');
+    state.imagem = state.imagem.filter(v => v !== btn.textContent);
+  } else if (row.querySelectorAll('.selected').length < max) {
+    btn.classList.add('selected');
+    state.imagem.push(btn.textContent);
+  }
+}
+
+/* ── SUBMIT — chama a Netlify Function ── */
+async function submitForm() {
+  if (!validateStep(7)) return;
+
+  const dados = {
+    id: 'client_' + Date.now(),
+    timestamp: new Date().toISOString(),
+    nome: document.getElementById('nome').value.trim(),
+    idade: document.getElementById('idade').value.trim(),
+    profissao: document.getElementById('profissao').value.trim(),
+    rotina: state.rotina,
+    imagem: state.imagem.join(', '),
+    insatisfacao: document.getElementById('insatisfacao').value.trim(),
+    referencia: document.getElementById('referencia').value.trim(),
+    limitacao: document.getElementById('limitacao').value.trim(),
+    diagnostico: null,
+    status: 'pre_avaliacao',
+    notas: ''
+  };
+
+  document.getElementById('s8').classList.remove('active');
+  document.getElementById('loading').style.display = 'block';
+  document.querySelector('.progress-wrap').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  try {
+    // ← chama o backend Netlify, não a API diretamente
+    const res = await fetch('/.netlify/functions/diagnostico', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dados })
+    });
+
+    if (!res.ok) throw new Error('Erro na function');
+    const result = await res.json();
+    dados.diagnostico = result.diagnostico;
+    dados.status = 'aguardando_consultoria';
+  } catch (e) {
+    console.error(e);
+    dados.diagnostico = {
+      perfil: 'Não foi possível gerar o diagnóstico automático.',
+      foco_consultoria: 'O consultor irá analisar suas respostas presencialmente.',
+      oportunidades: '—', alertas: '—',
+      proximos_passos: 'Aguarde o contato do consultor para agendar sua consultoria.'
+    };
+    dados.status = 'aguardando_consultoria';
+  }
+
+  // Salvar localmente
+  try {
+    const local = JSON.parse(localStorage.getItem('vis_clientes') || '[]');
+    const idx = local.findIndex(c => c.id === dados.id);
+    if (idx !== -1) { local[idx] = { ...local[idx], ...dados }; } else { local.push(dados); }
+    localStorage.setItem('vis_clientes', JSON.stringify(local));
+  } catch(e) {}
+
+  dadosGlobais = dados;
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+
+  const cards = [
+    { label: 'Perfil identificado', content: dados.diagnostico.perfil },
+    { label: 'Foco da sua consultoria', content: dados.diagnostico.foco_consultoria },
+    { label: 'Oportunidades de transformação', content: dados.diagnostico.oportunidades },
+    { label: 'Pontos de atenção', content: dados.diagnostico.alertas },
+    { label: 'Próximos passos', content: dados.diagnostico.proximos_passos }
+  ];
+
+  document.getElementById('result-cards').innerHTML = cards.map(c => `
+    <div class="result-card">
+      <div class="result-card-label">${c.label}</div>
+      <div class="result-card-content">${c.content}</div>
+    </div>`).join('');
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── GERAR PDF ── */
+function gerarPDF() {
+  if (!dadosGlobais) return;
+  const btn = document.getElementById('btn-pdf');
+  btn.classList.add('generating');
+  btn.textContent = 'Gerando PDF...';
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const d = dadosGlobais;
+    const diag = d.diagnostico || {};
+    const dataFmt = new Date(d.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    const ACCENT  = [184, 151, 90];
+    const DARK    = [15, 14, 12];
+    const GRAY    = [122, 118, 112];
+    const LIGHT   = [245, 237, 224];
+    const WHITE   = [255, 255, 255];
+    const GREEN   = [29, 158, 117];
+    const GREEN_L = [225, 245, 238];
+
+    const pageW = 210;
+    const margin = 18;
+    const contentW = pageW - margin * 2;
+    let y = 0;
+
+    doc.setFillColor(...DARK);
+    doc.rect(0, 0, pageW, 42, 'F');
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...WHITE);
+    doc.text('Visagismo', margin, 18);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...ACCENT);
+    doc.text('Pré-avaliação', margin, 26);
+    doc.setTextColor(200, 195, 185);
+    doc.setFontSize(9);
+    doc.text(`${d.nome}  ·  ${dataFmt}`, pageW - margin, 26, { align: 'right' });
+    doc.setDrawColor(...ACCENT);
+    doc.setLineWidth(0.8);
+    doc.line(margin, 42, pageW - margin, 42);
+    y = 54;
+
+    function checkNewPage(h) { if (y + h > 272) { doc.addPage(); y = 20; } }
+
+    function sectionTitle(title) {
+      checkNewPage(16);
+      doc.setFillColor(...LIGHT);
+      doc.roundedRect(margin, y, contentW, 10, 2, 2, 'F');
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...ACCENT);
+      doc.text(title.toUpperCase(), margin + 4, y + 6.5);
+      y += 14;
+    }
+
+    function field(label, value) {
+      if (!value || value === '—') return;
+      const lines = doc.splitTextToSize(String(value), contentW - 4);
+      const blockH = 7 + lines.length * 5.2 + 6;
+      checkNewPage(blockH);
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...GRAY);
+      doc.text(label.toUpperCase(), margin, y);
+      y += 4.5;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...DARK);
+      doc.text(lines, margin, y);
+      y += lines.length * 5.2 + 6;
+    }
+
+    function diagCard(label, value, highlight) {
+      if (!value || value === '—') return;
+      const lines = doc.splitTextToSize(String(value), contentW - 10);
+      const blockH = 8 + lines.length * 5.2 + 6;
+      checkNewPage(blockH);
+      doc.setFillColor(...(highlight ? GREEN_L : [250, 248, 244]));
+      doc.setDrawColor(...(highlight ? GREEN : [232, 228, 220]));
+      doc.setLineWidth(0.4);
+      doc.roundedRect(margin, y, contentW, blockH - 2, 3, 3, 'FD');
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...(highlight ? GREEN : ACCENT));
+      doc.text(label.toUpperCase(), margin + 5, y + 6);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...DARK);
+      doc.text(lines, margin + 5, y + 12);
+      y += blockH + 2;
+    }
+
+    sectionTitle('Dados do cliente');
+    const col1W = contentW * 0.55;
+    doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(...GRAY);
+    doc.text('NOME', margin, y); doc.text('IDADE', margin + col1W, y); y += 4.5;
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(...DARK);
+    doc.text(d.nome, margin, y); doc.setFont('helvetica', 'normal');
+    doc.text(d.idade + ' anos', margin + col1W, y); y += 8;
+    field('Profissão', d.profissao);
+    field('Rotina / contexto', d.rotina);
+
+    sectionTitle('Preferências e objetivos');
+    field('Imagem que deseja transmitir', d.imagem);
+    field('Principal insatisfação com o visual atual', d.insatisfacao);
+    field('Referência visual', d.referencia);
+    field('Limitações declaradas', d.limitacao);
+
+    sectionTitle('Diagnóstico — Análise inicial');
+    diagCard('Perfil identificado', diag.perfil, false);
+    diagCard('Foco da consultoria', diag.foco_consultoria, false);
+    diagCard('Oportunidades de transformação', diag.oportunidades, false);
+    diagCard('Pontos de atenção', diag.alertas, false);
+    diagCard('Próximos passos', diag.proximos_passos, true);
+
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setDrawColor(232, 228, 220); doc.setLineWidth(0.3);
+      doc.line(margin, 284, pageW - margin, 284);
+      doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(...GRAY);
+      doc.text('Consultoria de Visagismo Masculino — Documento confidencial', margin, 289);
+      doc.text(`${i} / ${totalPages}`, pageW - margin, 289, { align: 'right' });
+    }
+
+    doc.save('pre-avaliacao_' + d.nome.replace(/\s+/g, '_').toLowerCase() + '.pdf');
+
+    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> PDF baixado!`;
+    btn.style.background = '#1D9E75';
+    setTimeout(() => {
+      btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Baixar PDF da pré-avaliação`;
+      btn.style.background = ''; btn.classList.remove('generating');
+    }, 3000);
+
+  } catch (err) {
+    console.error(err);
+    btn.textContent = 'Erro ao gerar PDF';
+    btn.classList.remove('generating');
+  }
+}
+
+/* ── WHATSAPP ── */
+function compartilharWA() {
+  if (!dadosGlobais) return;
+  const d = dadosGlobais;
+  const diag = d.diagnostico || {};
+  const dataFmt = new Date(d.timestamp).toLocaleDateString('pt-BR');
+
+  const msg =
+`✦ *PRÉ-AVALIAÇÃO DE VISAGISMO*
+━━━━━━━━━━━━━━━━━━━━
+
+👤 *${d.nome}* — ${d.idade} anos
+💼 ${d.profissao}
+🗓️ ${dataFmt}
+
+━━━━━━━━━━━━━━━━━━━━
+📋 *RESPOSTAS*
+
+*Rotina:* ${d.rotina}
+*Imagem desejada:* ${d.imagem}
+*Principal insatisfação:* ${d.insatisfacao}
+*Referência visual:* ${d.referencia}
+*Limitações:* ${d.limitacao}
+
+━━━━━━━━━━━━━━━━━━━━
+🤖 *DIAGNÓSTICO IA*
+
+*Perfil identificado:*
+${diag.perfil || '—'}
+
+*Foco da consultoria:*
+${diag.foco_consultoria || '—'}
+
+*Oportunidades de transformação:*
+${diag.oportunidades || '—'}
+
+*Pontos de atenção:*
+${diag.alertas || '—'}
+
+*Próximos passos:*
+${diag.proximos_passos || '—'}
+
+━━━━━━━━━━━━━━━━━━━━
+_Consultoria de Visagismo Masculino_`;
+
+  const SEU_NUMERO = '5531988490906';
+
+  const url = SEU_NUMERO
+    ? `https://wa.me/${SEU_NUMERO}?text=${encodeURIComponent(msg)}`
+    : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+  window.open(url, '_blank');
+}
+</script>
+</body>
+</html>
