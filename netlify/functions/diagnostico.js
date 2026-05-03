@@ -1,10 +1,10 @@
-exports.handler = async function (event) {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+export default async (req) => {
+  if (req.method !== 'POST') {
+    return new Response('Method Not Allowed', { status: 405 });
   }
 
   try {
-    const { dados } = JSON.parse(event.body);
+    const { dados } = await req.json();
 
     const prompt = `Você é um consultor especialista em visagismo masculino. Com base nas respostas da pré-avaliação abaixo, gere um diagnóstico inicial personalizado.
 
@@ -30,7 +30,7 @@ Responda APENAS com JSON válido, sem markdown, sem texto adicional:
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'x-api-key': Netlify.env.get('ANTHROPIC_API_KEY'),
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
@@ -43,27 +43,26 @@ Responda APENAS com JSON válido, sem markdown, sem texto adicional:
     const result = await response.json();
 
     if (!response.ok) {
-      console.error('Erro API Claude:', result);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: 'Erro na API Claude', detail: result })
-      };
+      return new Response(JSON.stringify({ error: 'Erro na API Claude', detail: result }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     const raw = result.content.map(b => b.text || '').join('');
     const diagnostico = JSON.parse(raw.replace(/```json|```/g, '').trim());
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ diagnostico })
-    };
+    return new Response(JSON.stringify({ diagnostico }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
   } catch (err) {
-    console.error('Erro na function:', err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message })
-    };
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 };
+
+export const config = { path: '/.netlify/functions/diagnostico' };
